@@ -446,6 +446,7 @@ static void usage(char *name)
 #if defined(USE_SYSTEMD)
 		"        -Ws master-worker mode with systemd notify support.\n"
 #endif
+		"        -Wn master-worker mode with s6 notify support.\n"
 		"        -q quiet mode : don't display messages\n"
 		"        -c check mode : only check config files and exit\n"
 		"        -n sets the maximum total # of connections (uses ulimit -n)\n"
@@ -572,6 +573,13 @@ void mworker_reload()
 	if (global.tune.options & GTUNE_USE_SYSTEMD)
 		sd_notify(0, "RELOADING=1");
 #endif
+	/* if -Wn mode was requested then open fd 3, write an arbritrary line and close the fd */
+	if (global.tune.options & GTUNE_USE_S6_NOTIFY) {
+		FILE *notifyfd;
+		notifyfd = fdopen(3, "w");
+		fprintf(notifyfd, "UP\n");
+		fclose(notifyfd);
+	}
 	setenv("HAPROXY_MWORKER_REEXEC", "1", 1);
 
 	mworker_proc_list_to_env(); /* put the children description in the env */
@@ -1426,6 +1434,10 @@ static void init(int argc, char **argv)
 				ha_alert("master-worker mode with systemd support (-Ws) requested, but not compiled. Use master-worker mode (-W) if you are not using Type=notify in your unit file or recompile with USE_SYSTEMD=1.\n\n");
 				usage(progname);
 #endif
+			}
+			else if (*flag == 'W' && flag[1] == 'n') {
+				arg_mode |= MODE_MWORKER | MODE_FOREGROUND;
+				global.tune.options |= GTUNE_USE_S6_NOTIFY;
 			}
 			else if (*flag == 'W')
 				arg_mode |= MODE_MWORKER;
