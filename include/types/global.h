@@ -72,6 +72,7 @@
 #define GTUNE_BUSY_POLLING       (1<<11)
 #define GTUNE_LISTENER_MQ        (1<<12)
 #define GTUNE_SET_DUMPABLE       (1<<13)
+#define GTUNE_USE_S6_NOTIFY      (1<<14)
 
 /* Access level for a stats socket */
 #define ACCESS_LVL_NONE     0
