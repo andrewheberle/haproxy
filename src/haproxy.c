@@ -573,13 +573,6 @@ void mworker_reload()
 	if (global.tune.options & GTUNE_USE_SYSTEMD)
 		sd_notify(0, "RELOADING=1");
 #endif
-	/* if -Wn mode was requested then open fd 3, write an arbritrary line and close the fd */
-	if (global.tune.options & GTUNE_USE_S6_NOTIFY) {
-		FILE *notifyfd;
-		notifyfd = fdopen(3, "w");
-		fprintf(notifyfd, "UP\n");
-		fclose(notifyfd);
-	}
 	setenv("HAPROXY_MWORKER_REEXEC", "1", 1);
 
 	mworker_proc_list_to_env(); /* put the children description in the env */
@@ -660,6 +653,13 @@ static void mworker_loop()
 	if (global.tune.options & GTUNE_USE_SYSTEMD)
 		sd_notifyf(0, "READY=1\nMAINPID=%lu", (unsigned long)getpid());
 #endif
+	/* if -Wn mode was requested then open fd 3, write an arbritrary line and close the fd */
+	if (global.tune.options & GTUNE_USE_S6_NOTIFY) {
+		FILE *notifyfd;
+		notifyfd = fdopen(3, "w");
+		fprintf(notifyfd, "UP\n");
+		fclose(notifyfd);
+	}
 	/* Busy polling makes no sense in the master :-) */
 	global.tune.options &= ~GTUNE_BUSY_POLLING;
 
